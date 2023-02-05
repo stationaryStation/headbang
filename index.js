@@ -1,6 +1,7 @@
 // @ts-check
 import { Client } from "revolt.js";
 import { NodeVM } from "vm2";
+import util from "node:util"
 
 const revolt = new Client();
 
@@ -17,7 +18,11 @@ const nodevm = new NodeVM(
         require: {
             root: "./",
             builtin: ["*"],
-            external: true
+            external: {
+                modules: ["revolt.js", "shelljs"],
+                transitive: true
+            },
+            strict: false,
         }
     }
 );
@@ -32,7 +37,7 @@ function runCode(code) {
         if (result && result.length > 0 || result) {
             console.log(result);
 
-            return result
+            return util.inspect(result);
         } else {
             return "Nothing was returned";
         }
