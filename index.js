@@ -16,7 +16,7 @@ const nodevm = new NodeVM(
         console: "inherit",
         require: {
             root: "./",
-            builtin: ["os", "fs", "child_process"],
+            builtin: ["*"],
             external: true
         }
     }
