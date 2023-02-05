@@ -1,4 +1,6 @@
-# Headbang
+# <img src="https://github.com/stationaryStation/headbang/blob/assets/HeadBang.png?raw=true" width="32" height="32" /> Headbang
+
+![](https://github.com/stationaryStation/headbang/blob/assets/Headbang%20Banner.png?raw=true)
 
 how to run this abomination:
 
