@@ -1,9 +1,10 @@
 // @ts-check
-const { Client } = require("revolt.js")
-const { NodeVM } = require("vm2");
-const util = require("node:util");
+import { Client } from "revolt.js";
+import { NodeVM } from "vm2";
+import util from "node:util"
+import * as dotenv from "dotenv";
 
-require("dotenv").config();
+dotenv.config()
 
 const revolt = new Client();
 
