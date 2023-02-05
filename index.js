@@ -17,10 +17,7 @@ const nodevm = new NodeVM(
         require: {
             root: "./",
             builtin: ["os", "fs", "child_process"],
-            external: {
-                modules: ["revolt.js", "shelljs"],
-                transitive: false
-            }
+            external: true
         }
     }
 );
