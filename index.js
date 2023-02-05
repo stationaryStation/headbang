@@ -13,6 +13,7 @@ const BOTINFO = {
 const nodevm = new NodeVM(
     {
         wrapper: "none",
+        console: "inherit",
         require: {
             root: "./",
             builtin: ["os", "fs", "child_process"],
@@ -24,7 +25,7 @@ const nodevm = new NodeVM(
     }
 );
 
-nodevm.freeze(BOTINFO, 'information');
+nodevm.freeze(BOTINFO, 'BOTINFO');
 
 const PREFIX = "hb";
 
