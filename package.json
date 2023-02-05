@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "revolt.js": "^6.0.20",
+    "shelljs": "^0.8.5",
     "vm2": "^3.9.13"
   }
 }

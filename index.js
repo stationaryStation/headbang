@@ -3,16 +3,28 @@ import { Client } from "revolt.js";
 import { NodeVM } from "vm2";
 
 const revolt = new Client();
+
+const BOTINFO = {
+    version: "1.1.2",
+    packages: ["os", "fs", "child_process", "revolt.js", "shelljs"],
+    vm: "NodeVM"
+}
+
 const nodevm = new NodeVM(
     {
         wrapper: "none",
         require: {
             root: "./",
             builtin: ["os", "fs", "child_process"],
-            external: true
+            external: {
+                modules: ["revolt.js", "shelljs"],
+                transitive: false
+            }
         }
     }
 );
+
+nodevm.freeze(BOTINFO, 'information');
 
 const PREFIX = "hb";
 
