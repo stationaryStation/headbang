@@ -1,9 +1,18 @@
 // @ts-check
 import { Client } from "revolt.js";
-import { VM } from "vm2";
+import { NodeVM } from "vm2";
 
 const revolt = new Client();
-const nodevm = new VM();
+const nodevm = new NodeVM(
+    {
+        wrapper: "none",
+        require: {
+            root: "./",
+            builtin: ["os", "fs", "child_process"],
+            external: true
+        }
+    }
+);
 
 const PREFIX = "hb";
 
@@ -18,7 +27,7 @@ function runCode(code) {
             return "Nothing was returned";
         }
     } catch (err) {
-        return `code died\n${err}`;
+        return `${err}`;
     }
 }
 
@@ -35,7 +44,7 @@ revolt.on("message", async (message) => {
         let result = runCode(expresion);
 
         message.reply({
-            content: result
+            content: `Result: \`${result}\``
         })?.catch((e) => {
             console.log("bot has failed", e)
         });
