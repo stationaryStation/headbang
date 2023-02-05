@@ -1,9 +1,14 @@
 // @ts-check
 import { Client } from "revolt.js";
-import { VM } from "vm2";
+import { NodeVM } from "vm2";
 
 const revolt = new Client();
-const nodevm = new VM();
+const nodevm = new NodeVM({
+    require: {
+        external: true,
+        root: './'
+    }
+});
 
 const PREFIX = "hb";
 
