@@ -36,6 +36,8 @@ revolt.on("message", async (message) => {
 
         message.reply({
             content: result
+        })?.catch((e) => {
+            console.log("bot has failed", e.data.error.reason)
         });
     }
 })
