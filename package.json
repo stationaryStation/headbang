@@ -11,6 +11,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/node": "^18.11.19",
+    "@types/shelljs": "^0.8.11",
+    "@types/ws": "^8.5.4",
     "dotenv": "^16.0.3",
     "revolt.js": "^6.0.20",
     "shelljs": "^0.8.5",
