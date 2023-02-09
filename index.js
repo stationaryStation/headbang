@@ -23,7 +23,7 @@ const nodevm = new NodeVM(
             root: "./",
             builtin: ["*"],
             external: {
-                modules: ["revolt.js", "shelljs"],
+                modules: ["revolt.js", "shelljs", "./thing"],
                 transitive: true
             },
             strict: false,
@@ -69,7 +69,11 @@ const WHITELIST = [
     // @rexogamer
     "01FEEFJCKY5C4DMMJYZ20ACWWC",
     // @automod
-    "01FHGJ3NPP7XANQQH8C2BE44ZY"
+    "01FHGJ3NPP7XANQQH8C2BE44ZY",
+    // @ShadowLp174
+    "01G9MCW5KZFKT2CRAD3G3B9JN5",
+    // @Sneexy
+    "01FM1B8WHWAD0JXX4JR96CAPM3"
 ]
 
 function runCode(code) {
@@ -107,7 +111,7 @@ revolt.on("message", async (message) => {
 
 
         message.reply({
-            content: `Result: \`${result}\``
+            content: `Result: ${result}`
         })?.catch((e) => {
             console.log("bot has failed", e)
         });
@@ -137,6 +141,18 @@ revolt.on("message", async (message) => {
         // })?.catch((e) => {
         //     console.log("bot has failed", result, e)
         // });
+    } else if (command === "help") {
+        message.reply({
+          content: " ",
+          embeds: [{
+	    colour: "#E9186B",
+            title: "Headbang",
+            description: `\`runnode\`: run nodejs code
+\`runbash\`: run bash commands/code
+\`help\`: display this message
+`
+	  }]
+	})
     }
 })
 
