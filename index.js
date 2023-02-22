@@ -4,6 +4,9 @@ import { NodeVM } from "vm2";
 import util from "node:util"
 import { spawn } from "node:child_process";
 import * as dotenv from "dotenv";
+import pkg from "shelljs"
+
+const { exec } = pkg;
 
 dotenv.config()
 
@@ -73,7 +76,9 @@ const WHITELIST = [
     // @ShadowLp174
     "01G9MCW5KZFKT2CRAD3G3B9JN5",
     // @Sneexy
-    "01FM1B8WHWAD0JXX4JR96CAPM3"
+    "01FM1B8WHWAD0JXX4JR96CAPM3",
+    // @amysour (please do not break it again)
+    "01G9KEQPRZ5RMDXCK2DP8T3K2G"
 ]
 
 function runCode(code) {
@@ -90,6 +95,36 @@ function runCode(code) {
         return `${err}`;
     }
 }
+
+function runbash(code) {
+    try {
+        let result = exec(code || "", { async: false, encoding: "utf-8" }).stdout;
+        if (result && result.length > 0 || result) {
+            console.log(result);
+
+            return util.inspect(result);
+        } else {
+            return "Nothing was returned";
+        }
+    } catch (err) {
+        return `${err}`;
+    }
+}
+
+function runeval(code) {
+    try {
+        let result = eval(code || "")
+
+        if (result) {
+            return util.inspect(result);
+        } else {
+            return "No output"
+        }
+    } catch (err) {
+        return `${err}`
+    }
+}
+
 revolt.on("message", async (message) => {
     const args = message.content?.slice(PREFIX.length).trim().split(/ +/g);
     const command = args?.shift()?.toLocaleLowerCase();
@@ -115,44 +150,40 @@ revolt.on("message", async (message) => {
         })?.catch((e) => {
             console.log("bot has failed", e)
         });
-    } else if (command === "runbash") {
-        message.reply("not done :trol:");
-        // /**
-        //  * @type {string | Array<any> | object}
-        //  */
-        // let result;
+    } else if (command === "runeval") {
+        /**
+         * @type {string | Array<any> | object}
+         */
+        let result;
 
-        // if (WHITELIST.includes(message.author_id)) {
-        //     let expresion = args?.slice(1).join(" ");
-        //     let p = spawn(expresion || "")
+        if (WHITELIST.includes(message.author_id)) {
+            let expresion = args?.slice(1).join(" ");
+            result = eval(expresion || "");
+        } else {
+            result = `No perms :01G83M8KJE4KGQCQT2PP5EH3VT:
+Ask dumpling for perms btw`;
+        }
 
-        //     await p.stdout.on("data", (d) => {
-        //         result = d;
-        //     })
+        console.log(`${message.author?.username} sent command ${command} with result ${result}`);
 
-        // } else {
-        //     result = ":01G83M8KJE4KGQCQT2PP5EH3VT:";
-        // }
+        message.reply({
+            content: `Result: ${result}`
+        })?.catch((e) => {
+            console.log("bot has failed", e)
+        });
 
-        // console.log(`${message.author?.username} sent command ${command} with result ${result || "L"}`);
-
-        // message.reply({
-        //     content: `Result: \`${result || "No result"}\``
-        // })?.catch((e) => {
-        //     console.log("bot has failed", result, e)
-        // });
     } else if (command === "help") {
         message.reply({
-          content: " ",
-          embeds: [{
-	    colour: "#E9186B",
-            title: "Headbang",
-            description: `\`runnode\`: run nodejs code
-\`runbash\`: run bash commands/code
+            content: " ",
+            embeds: [{
+                colour: "#E9186B",
+                title: "Headbang",
+                description: `\`runnode\`: run nodejs code
+\`runeval\`: run nodejs code in eval (run bash using \`runbash\`)
 \`help\`: display this message
 `
-	  }]
-	})
+            }]
+        })
     }
 })
 
