@@ -5,7 +5,7 @@ import util from "node:util"
 import { spawn } from "node:child_process";
 import * as dotenv from "dotenv";
 import pkg from "shelljs"
-import fs from "node:fs"
+import { test } from "./thing.js";
 
 const { exec } = pkg;
 
@@ -58,11 +58,12 @@ function runCode(code) {
 
 function runbash(code) {
     try {
-        let result = exec(code || "", { async: false, encoding: "utf-8" }).stdout;
-        if (result && result.length > 0 || result) {
+        let result = exec(code || "", { async: false, encoding: "utf-8" });
+        if (result) {
             console.log(result);
 
-            return util.inspect(result);
+            return `\`STDOUT: ${result.stdout}\`
+\`STDERR: ${result.stderr}\``;
         } else {
             return "Nothing was returned";
         }
@@ -144,6 +145,27 @@ Ask dumpling for perms btw`;
 `
             }]
         })
+    } else if (command === "$" || command === "bash") {
+        /**
+        * @type {string | Array<any> | object}
+        */
+        let result;
+
+        if (WHITELIST.includes(message.author_id)) {
+            let expresion = args?.slice(1).join(" ");
+            result = runbash(expresion);
+        } else {
+            result = `No perms :01G83M8KJE4KGQCQT2PP5EH3VT:
+Ask dumpling for perms btw`;
+        }
+
+        console.log(`${message.author?.username} sent command ${command} with result ${result}`);
+
+        message.reply({
+            content: `Result: ${result}`
+        })?.catch((e) => {
+            console.log("bot has failed", e)
+        });
     }
 })
 
