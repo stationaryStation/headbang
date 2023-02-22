@@ -5,6 +5,7 @@ import util from "node:util"
 import { spawn } from "node:child_process";
 import * as dotenv from "dotenv";
 import pkg from "shelljs"
+import fs from "node:fs"
 
 const { exec } = pkg;
 
@@ -38,48 +39,7 @@ nodevm.freeze(BOTINFO, 'BOTINFO');
 
 const PREFIX = "hb";
 
-const WHITELIST = [
-    // @dumpling
-    "01G1V3VWVQFC8XAKYEPNYHHR2C",
-    // @lea_
-    "01EXAF3KX65608AJ4NG27YG1HM",
-    // @fabyr
-    "01GPPXD513FESW8VYZD509GKD7",
-    // @insert
-    "01EX2NCWQ0CHS3QJF0FEQS1GR4",
-    // @Error 404 Null not found
-    "01FH48GXF663JKTH1R13XRF747",
-    // @VeiledProduct80
-    "01FM34H06DZ3QV7813RG5HJDSK",
-    // @ToastXC
-    "01FSRTTGJC1XJ6ZEQJMSX8Q96C",
-    // @lokicalmito
-    "01G8914GKC48X0KYP1DPH5E1WM",
-    // @alexmeow4560
-    "01FESEWQKT7RESCNX5YF3JR29H",
-    // @Inderix
-    "01FGXHPMYHBJZ1SJ785YB33NFK",
-    // @Mini the bunny boy
-    "01GHK4YBA5RH0FA1E716QTZ1WD",
-    // @NoLogicAlan
-    "01FVB1ZGCPS8TJ4PD4P7NAFDZA",
-    // @DoruDoLasu
-    "01FM2X4GBE4A6CN9NNT0GV0DF5",
-    // @tame
-    "01GDVFASQERQYS9C93QWZGRVAF",
-    // @infi
-    "01F1WKM5TK2V6KCZWR6DGBJDTZ",
-    // @rexogamer
-    "01FEEFJCKY5C4DMMJYZ20ACWWC",
-    // @automod
-    "01FHGJ3NPP7XANQQH8C2BE44ZY",
-    // @ShadowLp174
-    "01G9MCW5KZFKT2CRAD3G3B9JN5",
-    // @Sneexy
-    "01FM1B8WHWAD0JXX4JR96CAPM3",
-    // @amysour (please do not break it again)
-    "01G9KEQPRZ5RMDXCK2DP8T3K2G"
-]
+const WHITELIST = JSON.parse(fs.readFileSync("./whitelist.json", "utf-8"));
 
 function runCode(code) {
     try {
@@ -146,7 +106,7 @@ revolt.on("message", async (message) => {
 
 
         message.reply({
-            content: `Result: ${result}`
+            content: `\`${result}\``
         })?.catch((e) => {
             console.log("bot has failed", e)
         });
@@ -167,7 +127,7 @@ Ask dumpling for perms btw`;
         console.log(`${message.author?.username} sent command ${command} with result ${result}`);
 
         message.reply({
-            content: `Result: ${result}`
+            content: `\`${result}\``,
         })?.catch((e) => {
             console.log("bot has failed", e)
         });
