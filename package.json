@@ -1,22 +1,24 @@
 {
-  "name": "headbang",
-  "version": "1.0.0",
-  "description": "A revolt.js powered bot that should make you bang your head against the wall",
-  "main": "./index.js",
-  "type": "module",
+  "name": "typescript-template",
+  "version": "1.1.0",
+  "description": "Sample Typescript Template",
+  "main": "dist/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "tsc",
+    "start": "node .",
+    "dev": "tsc && node ."
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "StationaryStation",
+  "license": "GPLv3",
   "dependencies": {
-    "@types/node": "^18.11.19",
     "@types/shelljs": "^0.8.11",
-    "@types/ws": "^8.5.4",
     "dotenv": "^16.0.3",
-    "revolt.js": "^6.0.20",
+    "prettier": "^2.8.4",
+    "revolt-toolset": "^1.0.63",
     "shelljs": "^0.8.5",
-    "vm2": "^3.9.13"
+    "typescript": "^4.9.5",
+    "vm2": "^3.9.14",
+    "ws": "^8.12.1"
   }
 }
