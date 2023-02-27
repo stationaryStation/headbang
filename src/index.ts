@@ -184,7 +184,14 @@ toolset.on("message", async (message) => {
                                 title: "Headbang | runBash",
                                 description: `## Result\n\`\`\`bash\n${res}\n\`\`\``,
                             })
-                        );
+                        ).catch((e) => {
+                                message.reply(
+                                    new EmbedBuilder({
+                                        title: "Headbang | runBash",
+                                        description: `## Oops! Couldn't send Message\nI couldn't send a message, maybe the output is too big?`
+                                    })
+                                )
+                        });
                     } else {
                         message.react("%E2%9D%8C");
                     }
