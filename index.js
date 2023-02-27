@@ -3,6 +3,7 @@ import { Client } from "revolt.js";
 import { NodeVM } from "vm2";
 import util from "node:util"
 import { spawn } from "node:child_process";
+import { exec as exec2 } from "node:child_process";
 import * as dotenv from "dotenv";
 import pkg from "shelljs"
 import { test } from "./thing.js";
@@ -83,6 +84,8 @@ function runbash(code) {
 }
 var msgSinceInChannel = {};
 
+var processes = {};
+
 async function runbashlive(code, message) {
     let prevMsg;
 
@@ -102,6 +105,8 @@ async function runbashlive(code, message) {
             // react to the last message with a trash icon so they know process has ended
             prevMsg?.react(encodeURIComponent("🗑️"));
         });
+
+        processes[message._id] = child.pid;
     } catch (err) {
         return `\`${err}\``;
     }
@@ -190,7 +195,9 @@ async function sayParts(message, text, prefix, noreply) {
     return lastMsg;
 }
 
-
+revolt.on("ready", () => {
+    console.log("Bot is ready!");
+});
 
 revolt.on("message", async (message) => {
     const args = message.content?.slice(PREFIX.length).trim().split(/ +/g);
@@ -295,13 +302,56 @@ Ask dumpling for perms btw`;
     }
 });
 
-revolt.on("message/update", async (message) => {
-    // look @ reactions
+revolt.on("message/updated", async (message) => {
+    // look @ reactions, if they reacted to our trashcan, kill the process
+    message.reactions?.forEach(async (reaction) => {
+        var us = false;
+        var them = false;
+        reaction.forEach(async (user) => {
+            if (user == revolt.user?._id) {
+                us = true;
+            }
+            // and from author
+            else if (user == message.author_id) {
+                them = true;
+            }
+        })
 
+        if (us && them) {
+            // kill the process
+            if (processes[message._id]) { // processes is a list of pids, lets kill it
+                // kill the process using kill command
+                let pid = processes[message._id];
+                let kill = exec2(`kill ${pid}`);
+                kill.on("close", (code) => {
+                    console.log(`Killed process ${pid} with code ${code}`);
+                    // say it
+                    message.reply({
+                        content: "🗑️ Killed process"
+                    });
+                });
+
+                delete processes[message._id]; // even if not killed, its not our problem anymore
+
+
+            }
+            else {
+                // say it
+                message.reply({
+                    content: "Error: Process already exited"
+                });
+            }
+        }
+    })
 });
+
+console.log("Starting...");
 
 if (process.env.TYPE === "BOT") {
     revolt.loginBot(process.env.TOKEN || "");
 } else if (process.env.TYPE === "USER") {
     revolt.login({ email: process.env.EMAIL || "", password: process.env.PASSWORD || "" });
+}
+else {
+    console.log("Please set ENV TYPE to BOT or USER.\n\nIf BOT, you'll need to set TOKEN.\n\nIf USER, you'll need to set EMAIL and PASSWORD.");
 }
