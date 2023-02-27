@@ -74,6 +74,10 @@ const WHITELIST = [
     "01G9KEQPRZ5RMDXCK2DP8T3K2G",
     // @Dell Optiplex 9020
     "01FNGH62F1GY31C32VEEMQ9E9Z",
+    // @crispycat
+    "01G4NHXWPHD1NWDDTHN3KSRW4Q",
+    // @FatalErrorCoded
+    "01EXAME8DPWQH72RCBPX490ZMQ"
 ];
 
 function runNode(code: string): string {
