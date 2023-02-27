@@ -214,7 +214,7 @@ toolset.on("message", async (message) => {
                         }\`\nPlatform: \`${process.platform}\`\nRelease: \`${
                             release
                         }\`\nBash: \`${execSync(
-                            "echo $BASH_VERSION"
+                            "bash -c 'echo $BASH_VERSION'"
                         ).toString()}\`\n### Packages\nTypescript ${(
                             require("../package.json").dependencies
                                 .typescript as string
