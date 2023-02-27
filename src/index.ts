@@ -17,6 +17,7 @@ enum COMMANDS {
     EVAL = "runeval",
     HELP = "help",
     ABOUT = "about",
+    WHITELIST = "whitelist"
 }
 
 const node_vm = new NodeVM({
@@ -233,6 +234,13 @@ toolset.on("message", async (message) => {
                         description: `## Help\n\`${COMMANDS.NODE}\`: Run NodeJS Code on VM2\n\`${COMMANDS.EVAL}\`: Run NodeJS Code using \`eval()\`\n\`${COMMANDS.BASH}\`: Run Bash commands\n\`${COMMANDS.HELP}\`: Show this embed\n\`${COMMANDS.ABOUT}\`: Information about Headbang`,
                     })
                 );
+            } else if (command === COMMANDS.WHITELIST) {
+                message.reply(
+                    new EmbedBuilder({
+                        title: "Headbang | Whitelist",
+                        description: `## IDs of whitelisted users\n\`\`\`txt\n${util.inspect(WHITELIST)}\n\`\`\``
+                    })
+                )
             }
         }
     }
