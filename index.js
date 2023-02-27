@@ -3,9 +3,11 @@ import { Client } from "revolt.js";
 import { NodeVM } from "vm2";
 import util from "node:util"
 import { spawn } from "node:child_process";
+import { exec as exec2 } from "node:child_process";
 import * as dotenv from "dotenv";
 import pkg from "shelljs"
 import { test } from "./thing.js";
+import fs from "node:fs";
 
 const { exec } = pkg;
 
@@ -39,48 +41,7 @@ nodevm.freeze(BOTINFO, 'BOTINFO');
 
 const PREFIX = "hb";
 
-const WHITELIST = [
-    // @dumpling
-    "01G1V3VWVQFC8XAKYEPNYHHR2C",
-    // @lea_
-    "01EXAF3KX65608AJ4NG27YG1HM",
-    // @fabyr
-    "01GPPXD513FESW8VYZD509GKD7",
-    // @insert
-    "01EX2NCWQ0CHS3QJF0FEQS1GR4",
-    // @Error 404 Null not found
-    "01FH48GXF663JKTH1R13XRF747",
-    // @VeiledProduct80
-    "01FM34H06DZ3QV7813RG5HJDSK",
-    // @ToastXC
-    "01FSRTTGJC1XJ6ZEQJMSX8Q96C",
-    // @lokicalmito
-    "01G8914GKC48X0KYP1DPH5E1WM",
-    // @alexmeow4560
-    "01FESEWQKT7RESCNX5YF3JR29H",
-    // @Inderix
-    "01FGXHPMYHBJZ1SJ785YB33NFK",
-    // @Mini the bunny boy
-    "01GHK4YBA5RH0FA1E716QTZ1WD",
-    // @NoLogicAlan
-    "01FVB1ZGCPS8TJ4PD4P7NAFDZA",
-    // @DoruDoLasu
-    "01FM2X4GBE4A6CN9NNT0GV0DF5",
-    // @tame
-    "01GDVFASQERQYS9C93QWZGRVAF",
-    // @infi
-    "01F1WKM5TK2V6KCZWR6DGBJDTZ",
-    // @rexogamer
-    "01FEEFJCKY5C4DMMJYZ20ACWWC",
-    // @automod
-    "01FHGJ3NPP7XANQQH8C2BE44ZY",
-    // @ShadowLp174
-    "01G9MCW5KZFKT2CRAD3G3B9JN5",
-    // @Sneexy
-    "01FM1B8WHWAD0JXX4JR96CAPM3",
-    // @amysour (please do not break it again)
-    "01G9KEQPRZ5RMDXCK2DP8T3K2G"
-]
+const WHITELIST = JSON.parse(fs.readFileSync("./whitelist.json", "utf-8"));
 
 function runCode(code) {
     try {
@@ -102,16 +63,55 @@ function runbash(code) {
         let result = exec(code || "", { async: false, encoding: "utf-8" });
         if (result) {
             console.log(result);
-
-            return `\`STDOUT: ${result.stdout}\`
-\`STDERR: ${result.stderr}\``;
+            if (!result.stdout && !result.stderr) {
+                return "No output";
+            }
+            else if (!result.stdout) {
+                return `${result.stderr}`;
+            }
+            else if (!result.stderr) {
+                return `${result.stdout}`;
+            }
+            else {
+                return `STDOUT: ${result.stdout}\nSTDERR: ${result.stderr}`;
+            }
         } else {
-            return "Nothing was returned";
+            return "No output";
         }
     } catch (err) {
-        return `${err}`;
+        return `\`${err}\``;
     }
 }
+var msgSinceInChannel = {};
+
+var processes = {};
+
+async function runbashlive(code, message) {
+    let prevMsg;
+
+    try {
+        let child = spawn(code || "", [], { shell: true });
+        child.stdout.setEncoding("utf-8");
+        child.stderr.setEncoding("utf-8");
+        child.stdout.on("data", async (data) => {
+            prevMsg = await sayParts(message, data.toString(), '', true);
+            msgSinceInChannel[message.channel._id] = false;
+        });
+        child.stderr.on("data", async (data) => {
+            prevMsg = await sayParts(message, data.toString(), '⛔️ '); // prefix with ⛔️ so they see it's an error
+            msgSinceInChannel[message.channel._id] = false;
+        });
+        child.on("close", (code) => {
+            // react to the last message with a trash icon so they know process has ended
+            prevMsg?.react(encodeURIComponent("🗑️"));
+        });
+
+        processes[message._id] = child.pid;
+    } catch (err) {
+        return `\`${err}\``;
+    }
+}
+
 
 function runeval(code) {
     try {
@@ -127,9 +127,86 @@ function runeval(code) {
     }
 }
 
+async function sayParts(message, text, prefix, noreply) {
+    if (!prefix) prefix = "";
+
+    // first, surround each line with `
+    var textSplit = text.split("\n");
+    // remove an empty line at bottom if there is one
+    if (textSplit[textSplit.length - 1].trim() == "") {
+        textSplit.pop();
+    }
+    for (let i = 0; i < textSplit.length; i++) {
+        // escape backticks
+        textSplit[i] = textSplit[i].replace(/`/g, "\\`");
+
+        textSplit[i] = `\`${textSplit[i]}\``;
+
+        // remove ansi codes like [37m[0m[1m and [?25l[?7l[37m[0m[1m
+        textSplit[i] = textSplit[i].replace(/\[[0-9;]*m/g, "");
+
+        // remove ansi codes like [?25h[?7h[37m[0m[1m
+        textSplit[i] = textSplit[i].replace(/\[[?0-9;]*[hlm]/g, "");
+
+        // remove ansi codes like [37m[0m[1m
+        textSplit[i] = textSplit[i].replace(/\[[0-9;]*[m]/g, "");
+
+        // replace 	with 4 spaces
+        textSplit[i] = textSplit[i].replace(/\t/g, "    ");
+
+        // lines with just `` should be empty, not removed
+        if (textSplit[i] == "``") {
+            textSplit[i] = "";
+        }
+    }
+    text = textSplit.join("\n");
+
+
+    let parts = text.match(/[\s\S]{1,2000}/g);
+
+    let lastMsg;
+
+    for (let i = 0; i < parts.length; i++) {
+        if (i == 0) {
+            if (noreply) {
+                lastMsg = await message.channel?.sendMessage({
+                    content: `${parts[i]}`
+                })?.catch((e) => {
+                    console.log("bot has failed.. or has it?", e)
+                });
+            }
+            else {
+                lastMsg = await message.reply({
+                    content: prefix + `${parts[i]}`
+                })?.catch((e) => {
+                    console.log("bot has failed.. or has it?", e)
+                });
+            }
+        }
+        else {
+            lastMsg = await message.channel?.sendMessage({
+                content: `${parts[i]}`
+            })?.catch((e) => {
+                console.log("bot has failed.. or has it?", e)
+            });
+            // we only reply to the first message so it looks cleaner and like a single message (there are visible cuts when you reply, it adds spacing)
+        }
+    }
+    return lastMsg;
+}
+
+revolt.on("ready", () => {
+    console.log("Bot is ready!");
+});
+
 revolt.on("message", async (message) => {
     const args = message.content?.slice(PREFIX.length).trim().split(/ +/g);
     const command = args?.shift()?.toLocaleLowerCase();
+
+    // if msg not from us, set msgSinceInChannel to true
+    if (message.author_id != revolt.user?._id) {
+        msgSinceInChannel[message.channel?._id] = true;
+    }
 
     if (command === "runnode") {
         /**
@@ -139,19 +216,18 @@ revolt.on("message", async (message) => {
 
         if (WHITELIST.includes(message.author_id)) {
             let expresion = args?.slice(1).join(" ");
+            // react to message with checkmark
+            await message.react(encodeURIComponent("✅"));
             result = runCode(expresion);
         } else {
+            await message.react(encodeURIComponent("⛔️"));
             result = ":01G83M8KJE4KGQCQT2PP5EH3VT:";
         }
 
         console.log(`${message.author?.username} sent command ${command} with result ${result || "L"}`);
 
 
-        message.reply({
-            content: `Result: ${result}`
-        })?.catch((e) => {
-            console.log("bot has failed", e)
-        });
+        sayParts(message, result);
     } else if (command === "runeval") {
         /**
          * @type {string | Array<any> | object}
@@ -160,19 +236,18 @@ revolt.on("message", async (message) => {
 
         if (WHITELIST.includes(message.author_id)) {
             let expresion = args?.slice(1).join(" ");
+            // react to message with checkmark
+            await message.react(encodeURIComponent("✅"));
             result = eval(expresion || "");
         } else {
+            await message.react(encodeURIComponent("⛔️"));
             result = `No perms :01G83M8KJE4KGQCQT2PP5EH3VT:
 Ask dumpling for perms btw`;
         }
 
         console.log(`${message.author?.username} sent command ${command} with result ${result}`);
 
-        message.reply({
-            content: `Result: ${result}`
-        })?.catch((e) => {
-            console.log("bot has failed", e)
-        });
+        sayParts(message, result);
 
     } else if (command === "help") {
         message.reply({
@@ -194,24 +269,89 @@ Ask dumpling for perms btw`;
 
         if (WHITELIST.includes(message.author_id)) {
             let expresion = args?.slice(1).join(" ");
+            // react to message with checkmark
+            await message.react(encodeURIComponent("✅"));
             result = runbash(expresion);
         } else {
+            await message.react(encodeURIComponent("⛔️"));
             result = `No perms :01G83M8KJE4KGQCQT2PP5EH3VT:
 Ask dumpling for perms btw`;
         }
 
         console.log(`${message.author?.username} sent command ${command} with result ${result}`);
 
-        message.reply({
-            content: `Result: ${result}`
-        })?.catch((e) => {
-            console.log("bot has failed", e)
-        });
+        sayParts(message, result);
     }
-})
+    else if (message.content?.startsWith('$ ')) {
+        // $ == bash command
+
+        if (WHITELIST.includes(message.author_id)) {
+            let expresion = message.content?.slice(2);
+            // react to message with checkmark
+            await message.react(encodeURIComponent("✅")); // just an indicator that the command is running
+            await message.react(encodeURIComponent("🗑️")); // user can click this to kill the process
+            await runbashlive(expresion, message); // since msg passed, we can know when to stop
+        } else {
+            await message.react(encodeURIComponent("⛔️"));
+            await message.reply({
+                content: `No perms :01G83M8KJE4KGQCQT2PP5EH3VT: stop being a poopyhead`
+            });
+        }
+
+        console.log(`${message.author?.username} sent command ${command} with some result im not sure of`);
+    }
+});
+
+revolt.on("message/updated", async (message) => {
+    // look @ reactions, if they reacted to our trashcan, kill the process
+    message.reactions?.forEach(async (reaction) => {
+        var us = false;
+        var them = false;
+        reaction.forEach(async (user) => {
+            if (user == revolt.user?._id) {
+                us = true;
+            }
+            // and from author
+            else if (user == message.author_id) {
+                them = true;
+            }
+        })
+
+        if (us && them) {
+            // kill the process
+            if (processes[message._id]) { // processes is a list of pids, lets kill it
+                // kill the process using kill command
+                let pid = processes[message._id];
+                let kill = exec2(`kill ${pid}`);
+                kill.on("close", (code) => {
+                    console.log(`Killed process ${pid} with code ${code}`);
+                    // say it
+                    message.reply({
+                        content: "🗑️ Killed process"
+                    });
+                });
+
+                delete processes[message._id]; // even if not killed, its not our problem anymore
+
+
+            }
+            else {
+                // say it
+                message.reply({
+                    content: "Error: Process already exited"
+                });
+            }
+        }
+    })
+});
+
+console.log("Starting...");
 
 if (process.env.TYPE === "BOT") {
     revolt.loginBot(process.env.TOKEN || "");
 } else if (process.env.TYPE === "USER") {
     revolt.login({ email: process.env.EMAIL || "", password: process.env.PASSWORD || "" });
+}
+else {
+    console.log("Please set ENV TYPE to BOT or USER.\n\nIf BOT, you'll need to set TOKEN.\n\nIf USER, you'll need to set EMAIL and PASSWORD.");
 }
